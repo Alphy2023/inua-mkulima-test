@@ -1,0 +1,114 @@
+diff --git a/src/App.jsx b/src/App.jsx
+index 2c81497..ac70c5d 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -34,6 +34,7 @@ import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+ import { paypalConfig } from "@configs/config";
+ import { setAppContents } from "@app/features/appstate/appStateSlice";
+ import { CustomAlert} from "@components/common/CustomAlert"
++import * as mobilenet from '@tensorflow-models/mobilenet';
+ 
+ 
+ const theme = createTheme();
+@@ -48,7 +49,7 @@ function App() {
+   // const [getNotifications] = useGetNotificationsMutation();
+   // const [getSpotlightedUsers] = useGetSpotlightedUsersMutation();
+   const [getAllAppContents] = useGetAllAppContentsMutation();
+-  const {showCustomAlert} = useContext(AppContext)
++  const {showCustomAlert,setModel} = useContext(AppContext)
+ 
+   const dispatch = useDispatch();
+ 
+@@ -152,7 +153,13 @@ function App() {
+     }
+   },[dispatch,getAllAppContents])
+   
+-    
++  useEffect(() => {
++    const loadModel = async () => {
++      const mobilenetModel = await mobilenet.load();
++      setModel(mobilenetModel);
++    };
++    loadModel();
++  }, [setModel]);  
+   useEffect(() => {
+     // Fetch data initially
+     // fetchData();
+diff --git a/src/components/auth/user/media/MediaUploader.jsx b/src/components/auth/user/media/MediaUploader.jsx
+index f6c527f..51133e2 100644
+--- a/src/components/auth/user/media/MediaUploader.jsx
++++ b/src/components/auth/user/media/MediaUploader.jsx
+@@ -7,7 +7,7 @@ import UploaderCard from './UploaderCard';
+ import MediaCard from './MediaCard';
+ import {MediaSlider} from "./MediaSlider"
+ import {Tooltip} from "antd"
+-import {WebCamCaptureCard} from "./WebCamCaptureCard"
++// import {WebCamCaptureCard} from "./WebCamCaptureCard"
+ 
+ const MediaUploader = ({medias}) => {
+   const [previewOpen, setPreviewOpen] = useState(false);
+@@ -103,11 +103,11 @@ const MediaUploader = ({medias}) => {
+               ))}
+               {galleryImages?.length === 5 ? null : (
+                 <>
+-                {!user?.verifiedImage ? (
++                {/* {!user?.verifiedImage ? (
+                   <div>
+                     <WebCamCaptureCard/>
+                   </div>
+-                ) : (
++                ) : ( */}
+ 
+                   <UploaderCard 
+                   formState={formState}
+@@ -118,7 +118,7 @@ const MediaUploader = ({medias}) => {
+                   
+                   icon={<CiImageOn/>}
+                   />
+-                )}
++                {/* )} */}
+                 </>
+                 )}
+               </div>
+diff --git a/src/components/auth/user/profile/ProfileForm.jsx b/src/components/auth/user/profile/ProfileForm.jsx
+index 2244ed2..c413524 100644
+--- a/src/components/auth/user/profile/ProfileForm.jsx
++++ b/src/components/auth/user/profile/ProfileForm.jsx
+@@ -40,7 +40,6 @@ const dateFormat = "YYYY-MM-DD";
+ import CustomBackdrop from "@components/common/backdrop/CustomBackdrop"
+ import CustomPasswordInput from '@components/common/inputs/CustomPasswordInput';
+ import {PreferenceModal} from "@components/auth/user/profile/preferences/PreferenceModal"
+-import * as mobilenet from '@tensorflow-models/mobilenet';
+ 
+ 
+ const ProfileForm = ({user}) => {
+@@ -54,13 +53,11 @@ const ProfileForm = ({user}) => {
+ 
+   const {countries,countryData,setAlertData,setShowCustomAlert,
+     setCountries,setCountryData,formState,setFormState,isMobileScreen,
+-    setModel
+   } = useContext(AppContext)
+   const [cities,setCities] = useState([])
+   const [checkProfileName] = useCheckProfileNameMutation()
+   const [customCity,setCustomCity] = useState("")
+   const inputRef = useRef(null);
+-  // const [getCountryCities] = useGetCountryCitiesMutation()
+ 
+   const dispatch = useDispatch()
+   const navigate = useNavigate();
+@@ -68,14 +65,7 @@ const ProfileForm = ({user}) => {
+   const handleRadio = (value) =>{
+     setCurrentRadio(value)
+   }
+-  useEffect(() => {
+-    const loadModel = async () => {
+-      const mobilenetModel = await mobilenet.load();
+-      setModel(mobilenetModel);
+-    };
+-    loadModel();
+-  }, [setModel]);
+-  // console.log("countries:",countries)
++
+ 
+    const disabledDate = (current) => {
+      // Disable dates before today
